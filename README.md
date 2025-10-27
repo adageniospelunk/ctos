@@ -75,6 +75,43 @@ ctosooa hello World
 Hello World! Welcome to ctosooa.
 ```
 
+#### Symfony Command
+
+Create a complete Symfony API project with all configurations.
+
+```bash
+ctosooa symfony <project-name>
+```
+
+**Example:**
+
+```bash
+ctosooa symfony hello
+```
+
+**What it creates:**
+- Complete Symfony API skeleton
+- API Platform and Maker bundle installed
+- MySQL/MariaDB configuration in `.env.local`
+- Docker Compose file for MySQL database
+- `HelloController` with two API endpoints:
+  - `GET /api/hello` - Returns hello message
+  - `GET /api/hello/{name}` - Returns personalized message
+- Complete README with setup instructions
+
+**Prerequisites:**
+- Composer installed
+- Docker (optional, for MySQL)
+
+**After creation:**
+```bash
+cd hello
+docker-compose up -d
+php bin/console doctrine:database:create
+symfony server:start
+curl http://localhost:8000/api/hello
+```
+
 #### Analyse Command
 
 Analyze a directory using Claude CLI to get insights about the codebase.
