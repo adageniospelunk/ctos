@@ -57,47 +57,57 @@ module.exports = function(args) {
   const tmpFile = path.join(require('os').tmpdir(), `ctosooa-prompt-${Date.now()}.txt`);
   fs.writeFileSync(tmpFile, prompt);
 
-  // Open a new terminal and execute Claude interactively
+  // Open a new terminal and execute Claude visibly
   console.log('Opening new terminal for analysis...');
   console.log('');
 
   try {
-    // Detect terminal emulator and open with Claude command
-    const command = `cd "${targetDir}" && ${claudePath} -p "$(cat ${tmpFile})" && echo "" && echo "Press Enter to close..." && read`;
+    // Create a script file to execute in the terminal
+    const scriptFile = path.join(require('os').tmpdir(), `ctosooa-script-${Date.now()}.sh`);
+    const homeDir = require('os').homedir();
+    const script = `#!/bin/bash
+# Load shell profile to get PATH and nvm
+[ -f "${homeDir}/.bashrc" ] && source "${homeDir}/.bashrc"
+[ -f "${homeDir}/.profile" ] && source "${homeDir}/.profile"
+[ -f "${homeDir}/.bash_profile" ] && source "${homeDir}/.bash_profile"
 
-    // Try different terminal emulators
-    let terminalCmd;
-    if (fs.existsSync('/usr/bin/gnome-terminal')) {
-      terminalCmd = `gnome-terminal -- bash -c '${command}'`;
-    } else if (fs.existsSync('/usr/bin/konsole')) {
-      terminalCmd = `konsole -e bash -c '${command}'`;
-    } else if (fs.existsSync('/usr/bin/xterm')) {
-      terminalCmd = `xterm -e bash -c '${command}'`;
-    } else if (fs.existsSync('/usr/bin/x-terminal-emulator')) {
-      terminalCmd = `x-terminal-emulator -e bash -c '${command}'`;
-    } else {
-      console.error('Error: No suitable terminal emulator found.');
-      console.error('Please install gnome-terminal, konsole, or xterm.');
-      process.exit(1);
-    }
+# Load nvm explicitly if available
+export NVM_DIR="${homeDir}/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
 
-    execSync(terminalCmd, {
-      stdio: 'ignore',
-      detached: true
+cd '${targetDir}'
+echo "=== CTO Sooatek Code Analysis ==="
+echo "Analyzing: ${targetDir}"
+echo ""
+echo "Please wait, Claude is analyzing..."
+echo "(This may take a few minutes)"
+echo ""
+
+# Use -p mode (no progress visible but reliable)
+${claudePath} -p "$(cat '${tmpFile}')"
+
+echo ""
+echo ""
+echo "=== Analysis Complete ==="
+echo "Press Enter to close..."
+read
+
+# Clean up
+rm -f '${tmpFile}' '${scriptFile}'
+`;
+    fs.writeFileSync(scriptFile, script);
+    fs.chmodSync(scriptFile, 0o755);
+
+    // Execute with gnome-terminal and wait for it
+    execSync(`gnome-terminal --wait -- bash -c "bash '${scriptFile}'"`, {
+      stdio: 'inherit'
     });
 
-    console.log('✅ Analysis started in new terminal window.');
+    console.log('✅ Analysis window closed.');
     console.log('');
 
-    // Clean up temp file after a delay (terminal needs time to read it)
-    setTimeout(() => {
-      if (fs.existsSync(tmpFile)) {
-        fs.unlinkSync(tmpFile);
-      }
-    }, 2000);
-
   } catch (error) {
-    // Clean up temp file on error
+    // Clean up temp files on error
     if (fs.existsSync(tmpFile)) {
       fs.unlinkSync(tmpFile);
     }
