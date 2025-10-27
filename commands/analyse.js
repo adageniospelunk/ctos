@@ -29,37 +29,12 @@ module.exports = function(args) {
     process.exit(1);
   }
 
-  // Scan directory
-  console.log('Scanning files...');
-  const allFiles = scanDirectory(targetDir);
-
-  if (allFiles.length === 0) {
-    console.log('No files found to analyze.');
-    return;
-  }
-
-  // Limit to most important files (max 50 files to avoid command line length issues)
-  const MAX_FILES = 50;
-  let files = allFiles;
-
-  if (allFiles.length > MAX_FILES) {
-    console.log(`Found ${allFiles.length} files. Analyzing the ${MAX_FILES} most important files...`);
-    // Prioritize: package.json, main files, controllers, models, etc.
-    files = prioritizeFiles(allFiles).slice(0, MAX_FILES);
-  } else {
-    console.log(`Found ${files.length} files to analyze.`);
-  }
-
+  console.log('Preparing analysis...');
   console.log('');
 
-  // Build prompt
-  let prompt = 'Analyze this codebase:\n\n';
-
-  files.forEach(file => {
-    const relativePath = path.relative(targetDir, file);
-    const content = fs.readFileSync(file, 'utf-8');
-    prompt += `\n--- ${relativePath} ---\n${content}\n`;
-  });
+  // Build prompt with just the directory path
+  let prompt = `Analyze the codebase located at: ${targetDir}\n\n`;
+  prompt += 'Please explore the directory and analyze all relevant files.\n\n';
 
   // Load format template
   const formatPath = path.join(__dirname, 'analyse', 'format.txt');
@@ -132,73 +107,4 @@ function getClaudePath() {
   return 'claude';
 }
 
-function prioritizeFiles(files) {
-  // Priority scoring system
-  const getPriority = (filePath) => {
-    const fileName = path.basename(filePath);
-    const dirName = path.dirname(filePath);
-
-    // High priority files
-    if (fileName === 'package.json') return 1000;
-    if (fileName === 'composer.json') return 1000;
-    if (fileName === 'README.md') return 900;
-    if (fileName === 'index.js' || fileName === 'index.ts') return 850;
-    if (fileName === 'app.js' || fileName === 'app.ts') return 850;
-    if (fileName === 'main.js' || fileName === 'main.ts') return 850;
-
-    // High priority directories
-    if (dirName.includes('/src/Controller')) return 800;
-    if (dirName.includes('/src/Service')) return 750;
-    if (dirName.includes('/src/Model')) return 750;
-    if (dirName.includes('/src/Entity')) return 750;
-    if (dirName.includes('/config')) return 700;
-    if (dirName.includes('/routes')) return 700;
-
-    // Medium priority
-    if (dirName.includes('/src')) return 500;
-    if (fileName.endsWith('Controller.php')) return 600;
-    if (fileName.endsWith('Service.php')) return 550;
-    if (fileName.endsWith('Model.js')) return 550;
-
-    // Lower priority for tests and vendor
-    if (dirName.includes('/tests')) return 100;
-    if (dirName.includes('/vendor')) return 50;
-
-    return 400; // Default priority
-  };
-
-  // Sort by priority (highest first)
-  return files.sort((a, b) => getPriority(b) - getPriority(a));
-}
-
-function scanDirectory(dir, fileList = []) {
-  const files = fs.readdirSync(dir);
-
-  files.forEach(file => {
-    const filePath = path.join(dir, file);
-    const stat = fs.statSync(filePath);
-
-    // Skip node_modules, .git, and hidden files/folders
-    if (file === 'node_modules' || file === '.git' || file.startsWith('.')) {
-      return;
-    }
-
-    if (stat.isDirectory()) {
-      scanDirectory(filePath, fileList);
-    } else if (stat.isFile()) {
-      // Only include common code files
-      const ext = path.extname(file);
-      const codeExtensions = ['.js', '.ts', '.jsx', '.tsx', '.json', '.md', '.txt', '.yml', '.yaml', '.sh'];
-
-      if (codeExtensions.includes(ext)) {
-        // Skip large files (> 100KB)
-        if (stat.size < 100 * 1024) {
-          fileList.push(filePath);
-        }
-      }
-    }
-  });
-
-  return fileList;
-}
 
