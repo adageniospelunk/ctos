@@ -1,0 +1,77 @@
+# CODEBASE ANALYSIS FORMAT
+
+Please analyze the provided codebase following this exact structure:
+
+## 1. PROJECT OVERVIEW
+- Brief description of what the project does
+- Main purpose and goals
+- Target audience or use case
+
+## 2. ARCHITECTURE & STRUCTURE
+- Overall architecture pattern (MVC, microservices, monolithic, etc.)
+- Main components and their responsibilities
+- Directory structure highlights
+- Key design patterns used
+
+## 3. TECHNOLOGIES & FRAMEWORKS
+- Programming languages and versions
+- Frameworks and libraries
+- Database technologies
+- Build tools and package managers
+- External dependencies
+
+## 4. CODE QUALITY ASSESSMENT
+### Strengths
+- What is done well
+- Good practices observed
+- Well-structured components
+
+### Areas for Improvement
+- Code smells or anti-patterns
+- Missing best practices
+- Technical debt
+- Maintainability concerns
+
+## 5. SECURITY ANALYSIS
+- Identified security vulnerabilities
+- Authentication/Authorization implementation
+- Input validation and sanitization
+- Sensitive data handling
+- Dependency security issues
+
+## 6. PERFORMANCE CONSIDERATIONS
+- Performance bottlenecks
+- Optimization opportunities
+- Resource usage concerns
+- Scalability assessment
+
+## 7. TESTING & QUALITY ASSURANCE
+- Test coverage analysis
+- Types of tests present (unit, integration, e2e)
+- Testing frameworks used
+- Quality assurance practices
+
+## 8. DOCUMENTATION
+- Code documentation quality
+- README and setup instructions
+- API documentation
+- Inline comments quality
+
+## 9. RECOMMENDATIONS
+### High Priority
+- Critical issues to address immediately
+- Security fixes needed
+
+### Medium Priority
+- Improvements for better maintainability
+- Performance optimizations
+
+### Low Priority
+- Nice-to-have enhancements
+- Code style improvements
+
+## 10. SUMMARY
+- Overall project health score (1-10)
+- Key strengths
+- Main concerns
+- Next steps recommendation

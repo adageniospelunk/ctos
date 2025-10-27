@@ -50,12 +50,22 @@ module.exports = function(args) {
     prompt += `\n--- ${relativePath} ---\n${content}\n`;
   });
 
-  prompt += '\n\nProvide a comprehensive analysis including:\n';
-  prompt += '1. Project structure and organization\n';
-  prompt += '2. Technologies and frameworks used\n';
-  prompt += '3. Code quality observations\n';
-  prompt += '4. Potential improvements\n';
-  prompt += '5. Security considerations\n';
+  // Load format template
+  const formatPath = path.join(__dirname, 'analyse', 'format.txt');
+  let formatInstructions = '';
+
+  if (fs.existsSync(formatPath)) {
+    formatInstructions = fs.readFileSync(formatPath, 'utf-8');
+    prompt += '\n\n' + formatInstructions;
+  } else {
+    // Fallback if format file doesn't exist
+    prompt += '\n\nProvide a comprehensive analysis including:\n';
+    prompt += '1. Project structure and organization\n';
+    prompt += '2. Technologies and frameworks used\n';
+    prompt += '3. Code quality observations\n';
+    prompt += '4. Potential improvements\n';
+    prompt += '5. Security considerations\n';
+  }
 
   // Write prompt to temp file
   const tmpFile = path.join(require('os').tmpdir(), `ctosooa-prompt-${Date.now()}.txt`);
