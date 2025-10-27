@@ -9,9 +9,9 @@ module.exports = function(args) {
     console.log('Creates a complete Symfony API project with:');
     console.log('  - Symfony API skeleton');
     console.log('  - Maker bundle');
-    console.log('  - MySQL/MariaDB configuration');
-    console.log('  - Docker Compose with MySQL');
+    console.log('  - SQLite database (pre-configured)');
     console.log('  - Hello controller example');
+    console.log('  - Ready to use with: symfony server:start');
     process.exit(1);
   }
 
@@ -24,12 +24,13 @@ module.exports = function(args) {
     process.exit(1);
   }
 
-  console.log(`Creating Symfony API project: ${projectName}`);
+  console.log(`🚀 Creating Symfony API project: ${projectName}`);
+  console.log('This may take a few minutes...');
   console.log('');
 
   try {
     // Step 1: Create Symfony project
-    console.log('📦 Creating Symfony API skeleton...');
+    console.log('📦 [1/7] Creating Symfony API skeleton...');
     execSync(`composer create-project symfony/skeleton ${projectName}`, {
       stdio: 'inherit',
       cwd: process.cwd()
@@ -37,44 +38,31 @@ module.exports = function(args) {
 
     // Step 2: Install necessary packages
     console.log('');
-    console.log('📦 Installing API Platform and Maker...');
-    execSync('composer require api symfony/maker-bundle doctrine/orm symfony/orm-pack', {
+    console.log('📦 [2/7] Installing API Platform and Maker...');
+    execSync('composer require api symfony/maker-bundle doctrine/orm symfony/orm-pack --no-interaction', {
       stdio: 'inherit',
       cwd: projectPath
     });
 
-    // Step 3: Create .env.local with MySQL configuration
+    // Step 3: Configure SQLite database (no external DB needed)
     console.log('');
-    console.log('⚙️  Configuring MySQL database...');
-    const envLocal = `# Database configuration
-DATABASE_URL="mysql://root:root@127.0.0.1:3306/${projectName}?serverVersion=8.0&charset=utf8mb4"
+    console.log('⚙️  [3/7] Configuring SQLite database...');
+    const envLocal = `# Database configuration (SQLite - no external DB needed)
+DATABASE_URL="sqlite:///%kernel.project_dir%/var/data.db"
 `;
     fs.writeFileSync(path.join(projectPath, '.env.local'), envLocal);
 
-    // Step 4: Create docker-compose.yml
-    console.log('🐳 Creating Docker Compose configuration...');
-    const dockerCompose = `version: '3.8'
-
-services:
-  mysql:
-    image: mysql:8.0
-    container_name: ${projectName}_mysql
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: ${projectName}
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-
-volumes:
-  mysql_data:
-`;
-    fs.writeFileSync(path.join(projectPath, 'docker-compose.yml'), dockerCompose);
+    // Step 4: Create database
+    console.log('');
+    console.log('🗄️  [4/7] Creating database...');
+    execSync('php bin/console doctrine:database:create --if-not-exists', {
+      stdio: 'inherit',
+      cwd: projectPath
+    });
 
     // Step 5: Create Hello Controller
-    console.log('📝 Creating Hello controller...');
+    console.log('');
+    console.log('📝 [5/7] Creating Hello controller...');
     const controllerDir = path.join(projectPath, 'src', 'Controller');
     if (!fs.existsSync(controllerDir)) {
       fs.mkdirSync(controllerDir, { recursive: true });
@@ -112,39 +100,32 @@ class HelloController extends AbstractController
 `;
     fs.writeFileSync(path.join(controllerDir, 'HelloController.php'), helloController);
 
-    // Step 6: Create README
-    console.log('📄 Creating README...');
+    // Step 6: Clear cache
+    console.log('');
+    console.log('🧹 [6/7] Clearing cache...');
+    execSync('php bin/console cache:clear', {
+      stdio: 'inherit',
+      cwd: projectPath
+    });
+
+    // Step 7: Create README
+    console.log('');
+    console.log('📄 [7/7] Creating README...');
     const readme = `# ${projectName}
 
 Symfony API project created with ctosooa.
 
-## Installation
-
-1. Start MySQL with Docker:
-\`\`\`bash
-docker-compose up -d
-\`\`\`
-
-2. Install dependencies:
-\`\`\`bash
-composer install
-\`\`\`
-
-3. Create database:
-\`\`\`bash
-php bin/console doctrine:database:create
-\`\`\`
-
-4. Run migrations (if any):
-\`\`\`bash
-php bin/console doctrine:migrations:migrate
-\`\`\`
+✅ **Everything is already configured! Just start the server.**
 
 ## Running the Server
 
 \`\`\`bash
+cd ${projectName}
 symfony server:start
-# or
+\`\`\`
+
+Or with PHP built-in server:
+\`\`\`bash
 php -S localhost:8000 -t public
 \`\`\`
 
@@ -162,11 +143,9 @@ curl http://localhost:8000/api/hello/World
 
 ## Database
 
-- **Host:** localhost
-- **Port:** 3306
-- **Database:** ${projectName}
-- **User:** root
-- **Password:** root
+- **Type:** SQLite
+- **Location:** \`var/data.db\`
+- **Already created and configured!**
 
 ## Development
 
@@ -183,32 +162,40 @@ php bin/console make:entity
 ### Generate migration:
 \`\`\`bash
 php bin/console make:migration
+php bin/console doctrine:migrations:migrate
 \`\`\`
 
-## Stopping MySQL
+## What's Included
 
-\`\`\`bash
-docker-compose down
-\`\`\`
+- ✅ Symfony 7.x (latest)
+- ✅ API Platform
+- ✅ Maker Bundle
+- ✅ Doctrine ORM
+- ✅ SQLite Database (pre-configured)
+- ✅ HelloController with 2 API endpoints
+- ✅ Ready to use!
 `;
     fs.writeFileSync(path.join(projectPath, 'README.md'), readme);
 
     // Success message
     console.log('');
+    console.log('========================================');
     console.log('✅ Symfony API project created successfully!');
+    console.log('========================================');
     console.log('');
     console.log('📂 Project location:', projectPath);
     console.log('');
-    console.log('🚀 Next steps:');
+    console.log('🚀 Start now:');
+    console.log('');
     console.log(`   cd ${projectName}`);
-    console.log('   docker-compose up -d');
-    console.log('   php bin/console doctrine:database:create');
     console.log('   symfony server:start');
     console.log('');
-    console.log('🌐 Test the API:');
+    console.log('🌐 Then test the API:');
+    console.log('');
     console.log('   curl http://localhost:8000/api/hello');
     console.log('   curl http://localhost:8000/api/hello/World');
     console.log('');
+    console.log('========================================');
 
   } catch (error) {
     console.error('');

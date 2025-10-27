@@ -89,28 +89,29 @@ ctosooa symfony <project-name>
 ctosooa symfony hello
 ```
 
-**What it creates:**
-- Complete Symfony API skeleton
-- API Platform and Maker bundle installed
-- MySQL/MariaDB configuration in `.env.local`
-- Docker Compose file for MySQL database
-- `HelloController` with two API endpoints:
+**What it does automatically:**
+- ✅ Creates complete Symfony API skeleton
+- ✅ Installs API Platform and Maker bundle
+- ✅ Configures SQLite database (no Docker needed!)
+- ✅ Creates the database
+- ✅ Creates `HelloController` with two API endpoints:
   - `GET /api/hello` - Returns hello message
   - `GET /api/hello/{name}` - Returns personalized message
-- Complete README with setup instructions
+- ✅ Clears cache
+- ✅ Everything ready to use!
 
 **Prerequisites:**
 - Composer installed
-- Docker (optional, for MySQL)
+- PHP 8.1+
 
-**After creation:**
+**After creation (only 2 steps!):**
 ```bash
 cd hello
-docker-compose up -d
-php bin/console doctrine:database:create
 symfony server:start
 curl http://localhost:8000/api/hello
 ```
+
+**That's it! Everything is pre-configured.**
 
 #### Analyse Command
 
