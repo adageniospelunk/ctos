@@ -77,21 +77,15 @@ Hello World! Welcome to ctosooa.
 
 #### Analyse Command
 
-Analyze a directory using Claude AI to get insights about the codebase.
+Analyze a directory using Claude CLI to get insights about the codebase.
 
 ```bash
 ctosooa analyse [directory]
 ```
 
-**Setup:**
+**Prerequisites:**
 
-First, set your Anthropic API key:
-
-```bash
-export ANTHROPIC_API_KEY="your-api-key-here"
-```
-
-Get your API key from: https://console.anthropic.com/
+Make sure you have Claude CLI installed and available in your PATH. The command will use the `claude` command by default.
 
 **Examples:**
 
@@ -103,10 +97,28 @@ ctosooa analyse
 ctosooa analyse /path/to/project
 ```
 
+**Configuration (Optional):**
+
+If your Claude CLI is not in PATH or has a custom location, create a `config.json` file in the ctosooa installation directory:
+
+```json
+{
+  "claudePath": "/usr/local/bin/claude"
+}
+```
+
+Or for custom installations:
+
+```json
+{
+  "claudePath": "/home/user/.nvm/versions/node/v20.0.0/bin/claude"
+}
+```
+
 **What it does:**
 - Scans all code files in the directory (`.js`, `.ts`, `.json`, `.md`, etc.)
 - Skips `node_modules`, `.git`, and hidden files
-- Sends the code to Claude for analysis
+- Executes Claude CLI with the codebase content
 - Provides insights on:
   - Project structure and organization
   - Technologies and frameworks used
