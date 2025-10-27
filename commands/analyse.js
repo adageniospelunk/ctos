@@ -57,7 +57,7 @@ module.exports = function(args) {
   prompt += '4. Potential improvements\n';
   prompt += '5. Security considerations\n';
 
-  // Write prompt to temp file
+  // Write prompt to temp file to avoid command line length limits
   const tmpFile = path.join(require('os').tmpdir(), `ctosooa-prompt-${Date.now()}.txt`);
   fs.writeFileSync(tmpFile, prompt);
 
@@ -66,18 +66,38 @@ module.exports = function(args) {
   console.log('');
 
   try {
-    const result = execSync(`cat "${tmpFile}" | ${claudePath}`, {
-      encoding: 'utf-8',
-      maxBuffer: 10 * 1024 * 1024, // 10MB buffer
-      cwd: targetDir
+    // Use heredoc-style input to pass the prompt
+    const { spawn } = require('child_process');
+    const claude = spawn(claudePath, [tmpFile], {
+      cwd: targetDir,
+      stdio: ['ignore', 'pipe', 'pipe']
     });
 
-    // Clean up temp file
-    fs.unlinkSync(tmpFile);
+    let output = '';
+    let errorOutput = '';
 
-    console.log('=== Analysis Result ===');
-    console.log('');
-    console.log(result);
+    claude.stdout.on('data', (data) => {
+      output += data.toString();
+    });
+
+    claude.stderr.on('data', (data) => {
+      errorOutput += data.toString();
+    });
+
+    claude.on('close', (code) => {
+      // Clean up temp file
+      fs.unlinkSync(tmpFile);
+
+      if (code !== 0) {
+        console.error('Error executing Claude:', errorOutput || 'Unknown error');
+        process.exit(1);
+      }
+
+      console.log('=== Analysis Result ===');
+      console.log('');
+      console.log(output);
+    });
+
   } catch (error) {
     // Clean up temp file on error
     if (fs.existsSync(tmpFile)) {
@@ -138,64 +158,3 @@ function scanDirectory(dir, fileList = []) {
   return fileList;
 }
 
-function callClaudeAPI(apiKey, prompt) {
-  return new Promise((resolve, reject) => {
-    const data = JSON.stringify({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 4096,
-      messages: [
-        {
-          role: 'user',
-          content: prompt + '\n\nProvide a comprehensive analysis including:\n1. Project structure and organization\n2. Technologies and frameworks used\n3. Code quality observations\n4. Potential improvements\n5. Security considerations'
-        }
-      ]
-    });
-
-    const options = {
-      hostname: 'api.anthropic.com',
-      port: 443,
-      path: '/v1/messages',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'Content-Length': data.length
-      }
-    };
-
-    const req = https.request(options, (res) => {
-      let responseData = '';
-
-      res.on('data', (chunk) => {
-        responseData += chunk;
-      });
-
-      res.on('end', () => {
-        try {
-          const json = JSON.parse(responseData);
-
-          if (json.error) {
-            reject(new Error(json.error.message || 'API error'));
-            return;
-          }
-
-          if (json.content && json.content[0] && json.content[0].text) {
-            resolve(json.content[0].text);
-          } else {
-            reject(new Error('Unexpected API response format'));
-          }
-        } catch (error) {
-          reject(new Error('Failed to parse API response: ' + error.message));
-        }
-      });
-    });
-
-    req.on('error', (error) => {
-      reject(error);
-    });
-
-    req.write(data);
-    req.end();
-  });
-}
