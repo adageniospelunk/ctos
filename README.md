@@ -75,6 +75,45 @@ ctosooa hello World
 Hello World! Welcome to ctosooa.
 ```
 
+#### Analyse Command
+
+Analyze a directory using Claude AI to get insights about the codebase.
+
+```bash
+ctosooa analyse [directory]
+```
+
+**Setup:**
+
+First, set your Anthropic API key:
+
+```bash
+export ANTHROPIC_API_KEY="your-api-key-here"
+```
+
+Get your API key from: https://console.anthropic.com/
+
+**Examples:**
+
+```bash
+# Analyze current directory
+ctosooa analyse
+
+# Analyze specific directory
+ctosooa analyse /path/to/project
+```
+
+**What it does:**
+- Scans all code files in the directory (`.js`, `.ts`, `.json`, `.md`, etc.)
+- Skips `node_modules`, `.git`, and hidden files
+- Sends the code to Claude for analysis
+- Provides insights on:
+  - Project structure and organization
+  - Technologies and frameworks used
+  - Code quality observations
+  - Potential improvements
+  - Security considerations
+
 #### Creating Your Own Commands
 
 1. Create a new `.js` file in the `commands/` folder
