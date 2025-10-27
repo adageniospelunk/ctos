@@ -1,0 +1,12 @@
+{
+  "name": "ctos",
+  "version": "1.0.0",
+  "description": "CTO Sooatek tool",
+  "main": "index.js",
+  "bin": {
+    "ctos": "index.js"
+  },
+  "keywords": [],
+  "author": "CTO Sooatek",
+  "license": "ISC"
+}
