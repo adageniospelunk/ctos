@@ -57,33 +57,51 @@ module.exports = function(args) {
   const tmpFile = path.join(require('os').tmpdir(), `ctosooa-prompt-${Date.now()}.txt`);
   fs.writeFileSync(tmpFile, prompt);
 
-  // Execute Claude CLI with -p flag reading from file
-  console.log('Sending to Claude for analysis...');
+  // Open a new terminal and execute Claude interactively
+  console.log('Opening new terminal for analysis...');
   console.log('');
 
   try {
-    const result = execSync(`${claudePath} -p "$(cat ${tmpFile})"`, {
-      encoding: 'utf-8',
-      maxBuffer: 10 * 1024 * 1024, // 10MB buffer
-      cwd: targetDir,
-      shell: '/bin/bash'
+    // Detect terminal emulator and open with Claude command
+    const command = `cd "${targetDir}" && ${claudePath} -p "$(cat ${tmpFile})" && echo "" && echo "Press Enter to close..." && read`;
+
+    // Try different terminal emulators
+    let terminalCmd;
+    if (fs.existsSync('/usr/bin/gnome-terminal')) {
+      terminalCmd = `gnome-terminal -- bash -c '${command}'`;
+    } else if (fs.existsSync('/usr/bin/konsole')) {
+      terminalCmd = `konsole -e bash -c '${command}'`;
+    } else if (fs.existsSync('/usr/bin/xterm')) {
+      terminalCmd = `xterm -e bash -c '${command}'`;
+    } else if (fs.existsSync('/usr/bin/x-terminal-emulator')) {
+      terminalCmd = `x-terminal-emulator -e bash -c '${command}'`;
+    } else {
+      console.error('Error: No suitable terminal emulator found.');
+      console.error('Please install gnome-terminal, konsole, or xterm.');
+      process.exit(1);
+    }
+
+    execSync(terminalCmd, {
+      stdio: 'ignore',
+      detached: true
     });
 
-    // Clean up temp file
-    fs.unlinkSync(tmpFile);
-
-    console.log('=== Analysis Result ===');
+    console.log('✅ Analysis started in new terminal window.');
     console.log('');
-    console.log(result);
+
+    // Clean up temp file after a delay (terminal needs time to read it)
+    setTimeout(() => {
+      if (fs.existsSync(tmpFile)) {
+        fs.unlinkSync(tmpFile);
+      }
+    }, 2000);
+
   } catch (error) {
     // Clean up temp file on error
     if (fs.existsSync(tmpFile)) {
       fs.unlinkSync(tmpFile);
     }
-    console.error('Error executing Claude:', error.message);
-    if (error.stderr) {
-      console.error(error.stderr.toString());
-    }
+    console.error('Error opening terminal:', error.message);
     process.exit(1);
   }
 };
