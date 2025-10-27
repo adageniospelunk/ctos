@@ -57,25 +57,33 @@ module.exports = function(args) {
   prompt += '4. Potential improvements\n';
   prompt += '5. Security considerations\n';
 
-  // Execute Claude CLI with -p flag
+  // Write prompt to temp file
+  const tmpFile = path.join(require('os').tmpdir(), `ctosooa-prompt-${Date.now()}.txt`);
+  fs.writeFileSync(tmpFile, prompt);
+
+  // Execute Claude CLI with -p flag reading from file
   console.log('Sending to Claude for analysis...');
   console.log('');
 
   try {
-    const { execSync } = require('child_process');
-
-    // Use execSync with -p flag to pass prompt
-    const result = execSync(`${claudePath} -p "${prompt.replace(/"/g, '\\"')}"`, {
+    const result = execSync(`${claudePath} -p "$(cat ${tmpFile})"`, {
       encoding: 'utf-8',
       maxBuffer: 10 * 1024 * 1024, // 10MB buffer
       cwd: targetDir,
       shell: '/bin/bash'
     });
 
+    // Clean up temp file
+    fs.unlinkSync(tmpFile);
+
     console.log('=== Analysis Result ===');
     console.log('');
     console.log(result);
   } catch (error) {
+    // Clean up temp file on error
+    if (fs.existsSync(tmpFile)) {
+      fs.unlinkSync(tmpFile);
+    }
     console.error('Error executing Claude:', error.message);
     if (error.stderr) {
       console.error(error.stderr.toString());
