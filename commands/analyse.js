@@ -57,53 +57,29 @@ module.exports = function(args) {
   prompt += '4. Potential improvements\n';
   prompt += '5. Security considerations\n';
 
-  // Write prompt to temp file to avoid command line length limits
-  const tmpFile = path.join(require('os').tmpdir(), `ctosooa-prompt-${Date.now()}.txt`);
-  fs.writeFileSync(tmpFile, prompt);
-
-  // Execute Claude CLI
+  // Execute Claude CLI with -p flag
   console.log('Sending to Claude for analysis...');
   console.log('');
 
   try {
-    // Use heredoc-style input to pass the prompt
-    const { spawn } = require('child_process');
-    const claude = spawn(claudePath, [tmpFile], {
+    const { execSync } = require('child_process');
+
+    // Use execSync with -p flag to pass prompt
+    const result = execSync(`${claudePath} -p "${prompt.replace(/"/g, '\\"')}"`, {
+      encoding: 'utf-8',
+      maxBuffer: 10 * 1024 * 1024, // 10MB buffer
       cwd: targetDir,
-      stdio: ['ignore', 'pipe', 'pipe']
+      shell: '/bin/bash'
     });
 
-    let output = '';
-    let errorOutput = '';
-
-    claude.stdout.on('data', (data) => {
-      output += data.toString();
-    });
-
-    claude.stderr.on('data', (data) => {
-      errorOutput += data.toString();
-    });
-
-    claude.on('close', (code) => {
-      // Clean up temp file
-      fs.unlinkSync(tmpFile);
-
-      if (code !== 0) {
-        console.error('Error executing Claude:', errorOutput || 'Unknown error');
-        process.exit(1);
-      }
-
-      console.log('=== Analysis Result ===');
-      console.log('');
-      console.log(output);
-    });
-
+    console.log('=== Analysis Result ===');
+    console.log('');
+    console.log(result);
   } catch (error) {
-    // Clean up temp file on error
-    if (fs.existsSync(tmpFile)) {
-      fs.unlinkSync(tmpFile);
-    }
     console.error('Error executing Claude:', error.message);
+    if (error.stderr) {
+      console.error(error.stderr.toString());
+    }
     process.exit(1);
   }
 };
