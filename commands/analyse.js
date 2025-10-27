@@ -31,14 +31,25 @@ module.exports = function(args) {
 
   // Scan directory
   console.log('Scanning files...');
-  const files = scanDirectory(targetDir);
+  const allFiles = scanDirectory(targetDir);
 
-  if (files.length === 0) {
+  if (allFiles.length === 0) {
     console.log('No files found to analyze.');
     return;
   }
 
-  console.log(`Found ${files.length} files to analyze.`);
+  // Limit to most important files (max 50 files to avoid command line length issues)
+  const MAX_FILES = 50;
+  let files = allFiles;
+
+  if (allFiles.length > MAX_FILES) {
+    console.log(`Found ${allFiles.length} files. Analyzing the ${MAX_FILES} most important files...`);
+    // Prioritize: package.json, main files, controllers, models, etc.
+    files = prioritizeFiles(allFiles).slice(0, MAX_FILES);
+  } else {
+    console.log(`Found ${files.length} files to analyze.`);
+  }
+
   console.log('');
 
   // Build prompt
@@ -119,6 +130,45 @@ function getClaudePath() {
 
   // Default to 'claude' in PATH
   return 'claude';
+}
+
+function prioritizeFiles(files) {
+  // Priority scoring system
+  const getPriority = (filePath) => {
+    const fileName = path.basename(filePath);
+    const dirName = path.dirname(filePath);
+
+    // High priority files
+    if (fileName === 'package.json') return 1000;
+    if (fileName === 'composer.json') return 1000;
+    if (fileName === 'README.md') return 900;
+    if (fileName === 'index.js' || fileName === 'index.ts') return 850;
+    if (fileName === 'app.js' || fileName === 'app.ts') return 850;
+    if (fileName === 'main.js' || fileName === 'main.ts') return 850;
+
+    // High priority directories
+    if (dirName.includes('/src/Controller')) return 800;
+    if (dirName.includes('/src/Service')) return 750;
+    if (dirName.includes('/src/Model')) return 750;
+    if (dirName.includes('/src/Entity')) return 750;
+    if (dirName.includes('/config')) return 700;
+    if (dirName.includes('/routes')) return 700;
+
+    // Medium priority
+    if (dirName.includes('/src')) return 500;
+    if (fileName.endsWith('Controller.php')) return 600;
+    if (fileName.endsWith('Service.php')) return 550;
+    if (fileName.endsWith('Model.js')) return 550;
+
+    // Lower priority for tests and vendor
+    if (dirName.includes('/tests')) return 100;
+    if (dirName.includes('/vendor')) return 50;
+
+    return 400; // Default priority
+  };
+
+  // Sort by priority (highest first)
+  return files.sort((a, b) => getPriority(b) - getPriority(a));
 }
 
 function scanDirectory(dir, fileList = []) {
