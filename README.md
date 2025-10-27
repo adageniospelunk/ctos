@@ -12,13 +12,32 @@ npm install -g ctosooa
 
 ## Usage
 
+### Echo Command
+
+The `echo` command prints the provided message to the console.
+
 ```bash
 ctosooa echo <message>
 ```
 
-Example:
+**Examples:**
+
 ```bash
+# Simple message
 ctosooa echo "Hello World"
+
+# Multiple words
+ctosooa echo This is a test message
+
+# With quotes
+ctosooa echo "Welcome to ctosooa CLI"
+```
+
+**Output:**
+```
+Hello World
+This is a test message
+Welcome to ctosooa CLI
 ```
 
 ## Uninstallation
