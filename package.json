@@ -1,6 +1,6 @@
 {
   "name": "ctosooa",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "CTO Sooatek tool",
   "main": "index.js",
   "bin": {
