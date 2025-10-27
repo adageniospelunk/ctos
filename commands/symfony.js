@@ -217,7 +217,9 @@ php bin/console doctrine:migrations:migrate
 
   } catch (error) {
     console.error('');
-    console.error('❌ Error creating Symfony project:', error.message);
+    console.error('❌ Error during project creation:', error.message);
+    console.error('');
+    console.error('The project may be partially created. Check the directory and complete setup manually.');
     process.exit(1);
   }
 };
