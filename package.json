@@ -4,7 +4,7 @@
   "description": "CTO Sooatek tool",
   "main": "index.js",
   "bin": {
-    "ctos": "index.js"
+    "ctosooa": "index.js"
   },
   "keywords": [],
   "author": "CTO Sooatek",
