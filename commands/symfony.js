@@ -9,7 +9,7 @@ module.exports = function(args) {
     console.log('Creates a complete Symfony API project with:');
     console.log('  - Symfony API skeleton');
     console.log('  - Maker bundle');
-    console.log('  - SQLite database (pre-configured)');
+    console.log('  - MySQL database (pre-configured)');
     console.log('  - Hello controller example');
     console.log('  - Ready to use with: symfony server:start');
     process.exit(1);
@@ -44,21 +44,35 @@ module.exports = function(args) {
       cwd: projectPath
     });
 
-    // Step 3: Configure SQLite database (no external DB needed)
+    // Step 3: Configure MySQL database
     console.log('');
-    console.log('⚙️  [3/7] Configuring SQLite database...');
-    const envLocal = `# Database configuration (SQLite - no external DB needed)
-DATABASE_URL="sqlite:///%kernel.project_dir%/var/data.db"
+    console.log('⚙️  [3/7] Configuring MySQL database...');
+    const dbName = projectName.replace(/[^a-zA-Z0-9]/g, '_');
+    const envLocal = `# Database configuration (MySQL)
+DATABASE_URL="mysql://root:root@127.0.0.1:3306/${dbName}?serverVersion=8.0&charset=utf8mb4"
 `;
     fs.writeFileSync(path.join(projectPath, '.env.local'), envLocal);
 
     // Step 4: Create database
     console.log('');
     console.log('🗄️  [4/7] Creating database...');
-    execSync('php bin/console doctrine:database:create --if-not-exists', {
-      stdio: 'inherit',
-      cwd: projectPath
-    });
+    try {
+      execSync('php bin/console doctrine:database:create --if-not-exists', {
+        stdio: 'inherit',
+        cwd: projectPath
+      });
+    } catch (error) {
+      console.log('');
+      console.log('⚠️  Warning: Could not create database automatically.');
+      console.log('   Make sure MySQL is running and accessible with:');
+      console.log('   - Host: 127.0.0.1:3306');
+      console.log('   - User: root');
+      console.log('   - Password: root');
+      console.log('');
+      console.log('   You can create it manually later with:');
+      console.log(`   php bin/console doctrine:database:create`);
+      console.log('');
+    }
 
     // Step 5: Create Hello Controller
     console.log('');
@@ -143,9 +157,13 @@ curl http://localhost:8000/api/hello/World
 
 ## Database
 
-- **Type:** SQLite
-- **Location:** \`var/data.db\`
-- **Already created and configured!**
+- **Type:** MySQL
+- **Host:** 127.0.0.1:3306
+- **Database:** ${dbName}
+- **User:** root
+- **Password:** root
+
+**Note:** Make sure MySQL is running before starting the server.
 
 ## Development
 
@@ -171,7 +189,7 @@ php bin/console doctrine:migrations:migrate
 - ✅ API Platform
 - ✅ Maker Bundle
 - ✅ Doctrine ORM
-- ✅ SQLite Database (pre-configured)
+- ✅ MySQL Database (pre-configured)
 - ✅ HelloController with 2 API endpoints
 - ✅ Ready to use!
 `;

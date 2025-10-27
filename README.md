@@ -92,8 +92,8 @@ ctosooa symfony hello
 **What it does automatically:**
 - ✅ Creates complete Symfony API skeleton
 - ✅ Installs API Platform and Maker bundle
-- ✅ Configures SQLite database (no Docker needed!)
-- ✅ Creates the database
+- ✅ Configures MySQL database
+- ✅ Creates the database (if MySQL is running)
 - ✅ Creates `HelloController` with two API endpoints:
   - `GET /api/hello` - Returns hello message
   - `GET /api/hello/{name}` - Returns personalized message
@@ -103,6 +103,7 @@ ctosooa symfony hello
 **Prerequisites:**
 - Composer installed
 - PHP 8.1+
+- MySQL running (recommended: root/root credentials)
 
 **After creation (only 2 steps!):**
 ```bash
